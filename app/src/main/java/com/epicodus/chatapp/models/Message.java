@@ -1,27 +1,26 @@
 package com.epicodus.chatapp.models;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Created by Guest on 7/13/16.
  */
 public class Message {
+    private String user;
     private String message;
-    private String username;
-    private String timestamp;
     private String pushId;
 
     public Message() {}
 
-    public Message(String message, String username, String timestamp) {
+    public Message(String message, String user) {
         this.message = message;
-        this.username = username;
-        this.timestamp = timestamp;
+        this.user = user;
     }
 
     public String getMessage() {return message;}
 
-    public String getUsername() {return username;}
-
-    public String getTimestamp() {return timestamp;}
+    public String getUser() {return user;}
 
     public void setPushId( String mPushId) {
         this.pushId = mPushId;
