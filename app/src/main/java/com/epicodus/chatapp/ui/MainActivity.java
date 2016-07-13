@@ -19,6 +19,7 @@ import com.epicodus.chatapp.models.Message;
 import com.epicodus.chatapp.models.User;
 import com.epicodus.chatapp.ui.LoginActivity;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -32,6 +33,7 @@ import butterknife.Bind;
 import butterknife.ButterKnife;
 
 public class MainActivity extends AppCompatActivity {
+    public static final String TAG = MainActivity.class.getSimpleName();
     final ArrayList<String> messages = new ArrayList<>();
 
     @Bind(R.id.newMessageButton) Button mNewMessageButton;
@@ -40,6 +42,9 @@ public class MainActivity extends AppCompatActivity {
     private DatabaseReference mInputtedMessageReference;
 
     private ArrayAdapter mAdapter;
+
+    private FirebaseAuth mAuth;
+    private FirebaseAuth.AuthStateListener mAuthListener;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -57,7 +62,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onChildAdded(DataSnapshot dataSnapshot, String s) {
                 Log.d("onChildAdded", "called");
-                messages.add(dataSnapshot.getValue(Message.class).getMessage());
+                messages.add(dataSnapshot.getValue(Message.class).getMessageWithEmail());
                 mAdapter.notifyDataSetChanged();
 
             }
@@ -123,7 +128,9 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void saveMessageToFirebase(String message) {
-        String userObject = "email@email.com";
+        mAuth = FirebaseAuth.getInstance();
+        FirebaseUser fUser = mAuth.getCurrentUser();
+        String userObject = fUser.getEmail();
         Message messageObject = new Message(message, userObject);
         DatabaseReference ref = mInputtedMessageReference.push();
         String pushId = ref.getKey();
