@@ -3,6 +3,8 @@ package com.epicodus.chatapp.ui;
 import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -15,11 +17,13 @@ import android.widget.ListView;
 import android.widget.TextView;
 
 import com.epicodus.chatapp.Constants;
+import com.epicodus.chatapp.MessageHolder;
 import com.epicodus.chatapp.R;
 import com.epicodus.chatapp.models.Message;
 import com.epicodus.chatapp.models.User;
 import com.epicodus.chatapp.ui.LoginActivity;
 import com.firebase.ui.database.FirebaseListAdapter;
+import com.firebase.ui.database.FirebaseRecyclerAdapter;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.ChildEventListener;
@@ -40,9 +44,8 @@ public class MainActivity extends AppCompatActivity {
 
     @Bind(R.id.newMessageButton) Button mNewMessageButton;
     @Bind(R.id.messageEditText) EditText mMessageEditText;
-    @Bind(R.id.messageListView) ListView mMessageListView;
 
-    private FirebaseListAdapter mAdapter;
+    private FirebaseRecyclerAdapter mAdapter;
 
     private FirebaseAuth mAuth;
     private FirebaseAuth.AuthStateListener mAuthListener;
@@ -54,17 +57,22 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
 
+        mAuth = FirebaseAuth.getInstance();
         final DatabaseReference ref = FirebaseDatabase.getInstance().getReference();
 
-        mAdapter = new FirebaseListAdapter<Message>(this, Message.class, android.R.layout.two_line_list_item, ref) {
-            @Override
-            protected void populateView(View view, Message message, int position) {
-                ((TextView)view.findViewById(android.R.id.text1)).setText(message.getMessage());
-                ((TextView)view.findViewById(android.R.id.text2)).setText(message.getUser());
+        RecyclerView recycler = (RecyclerView) findViewById(R.id.messages_recycler);
 
+        recycler.setHasFixedSize(true);
+        recycler.setLayoutManager(new LinearLayoutManager(this));
+
+        mAdapter = new FirebaseRecyclerAdapter<Message, MessageHolder>(Message.class, android.R.layout.two_line_list_item, MessageHolder.class, ref) {
+            @Override
+            public void populateViewHolder(MessageHolder messageViewHolder, Message message, int position) {
+                messageViewHolder.setText(message.getMessage());
+                messageViewHolder.setName(message.getUser());
             }
         };
-        mMessageListView.setAdapter(mAdapter);
+        recycler.setAdapter(mAdapter);
 
         mNewMessageButton.setOnClickListener(new View.OnClickListener() {
             @Override
