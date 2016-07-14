@@ -41,12 +41,12 @@ public class MainActivity extends AppCompatActivity {
     @Bind(R.id.newMessageButton) Button mNewMessageButton;
     @Bind(R.id.messageEditText) EditText mMessageEditText;
     @Bind(R.id.messageListView) ListView mMessageListView;
-    private DatabaseReference mInputtedMessageReference;
 
     private FirebaseListAdapter mAdapter;
 
     private FirebaseAuth mAuth;
     private FirebaseAuth.AuthStateListener mAuthListener;
+    public DatabaseReference ref;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -54,7 +54,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
 
-        DatabaseReference ref = FirebaseDatabase.getInstance().getReference();
+        final DatabaseReference ref = FirebaseDatabase.getInstance().getReference();
 
         mAdapter = new FirebaseListAdapter<Message>(this, Message.class, android.R.layout.two_line_list_item, ref) {
             @Override
@@ -66,48 +66,15 @@ public class MainActivity extends AppCompatActivity {
         };
         mMessageListView.setAdapter(mAdapter);
 
-        mInputtedMessageReference = FirebaseDatabase
-                .getInstance()
-                .getReference()
-                .child(Constants.FIREBASE_CHILD_MESSAGE);
-
-
-        mInputtedMessageReference.addChildEventListener(new ChildEventListener() {
-            @Override
-            public void onChildAdded(DataSnapshot dataSnapshot, String s) {
-                Log.d("onChildAdded", "called");
-                messages.add(dataSnapshot.getValue(Message.class).getMessage());
-                mAdapter.notifyDataSetChanged();
-
-            }
-
-            @Override
-            public void onChildChanged(DataSnapshot dataSnapshot, String s) {
-
-            }
-
-            @Override
-            public void onChildRemoved(DataSnapshot dataSnapshot) {
-                messages.remove(dataSnapshot.getValue(Message.class).getMessage());
-                mAdapter.notifyDataSetChanged();
-            }
-
-            @Override
-            public void onChildMoved(DataSnapshot dataSnapshot, String s) {
-
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-
-            }
-        });
-
         mNewMessageButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 String message = mMessageEditText.getText().toString();
-                saveMessageToFirebase(message);
+                mAuth = FirebaseAuth.getInstance();
+                FirebaseUser currentUser = mAuth.getCurrentUser();
+                String email = currentUser.getEmail();
+                ref.push().setValue(new Message(message, email));
+                mMessageEditText.setText("");
             }
         });
 
@@ -136,17 +103,6 @@ public class MainActivity extends AppCompatActivity {
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         startActivity(intent);
         finish();
-    }
-
-    public void saveMessageToFirebase(String message) {
-        mAuth = FirebaseAuth.getInstance();
-        FirebaseUser fUser = mAuth.getCurrentUser();
-        String userObject = fUser.getEmail();
-        Message messageObject = new Message(message, userObject);
-        DatabaseReference ref = mInputtedMessageReference.push();
-        String pushId = ref.getKey();
-        messageObject.setPushId(pushId);
-        ref.setValue(messageObject);
     }
 
     @Override
