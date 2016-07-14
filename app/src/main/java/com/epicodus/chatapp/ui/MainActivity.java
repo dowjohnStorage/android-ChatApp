@@ -59,8 +59,8 @@ public class MainActivity extends AppCompatActivity {
         mAdapter = new FirebaseListAdapter<Message>(this, Message.class, android.R.layout.two_line_list_item, ref) {
             @Override
             protected void populateView(View view, Message message, int position) {
-                ((TextView)view.findViewById(android.R.id.text1)).setText(message.getUser());
-                ((TextView)view.findViewById(android.R.id.text2)).setText(message.getMessage());
+                ((TextView)view.findViewById(android.R.id.text1)).setText(message.getMessage());
+                ((TextView)view.findViewById(android.R.id.text2)).setText(message.getUser());
 
             }
         };
