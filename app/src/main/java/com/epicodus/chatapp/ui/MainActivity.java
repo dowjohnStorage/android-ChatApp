@@ -12,12 +12,14 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.TextView;
 
 import com.epicodus.chatapp.Constants;
 import com.epicodus.chatapp.R;
 import com.epicodus.chatapp.models.Message;
 import com.epicodus.chatapp.models.User;
 import com.epicodus.chatapp.ui.LoginActivity;
+import com.firebase.ui.database.FirebaseListAdapter;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.ChildEventListener;
@@ -41,7 +43,7 @@ public class MainActivity extends AppCompatActivity {
     @Bind(R.id.messageListView) ListView mMessageListView;
     private DatabaseReference mInputtedMessageReference;
 
-    private ArrayAdapter mAdapter;
+    private FirebaseListAdapter mAdapter;
 
     private FirebaseAuth mAuth;
     private FirebaseAuth.AuthStateListener mAuthListener;
@@ -51,6 +53,18 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
+
+        DatabaseReference ref = FirebaseDatabase.getInstance().getReference();
+
+        mAdapter = new FirebaseListAdapter<Message>(this, Message.class, android.R.layout.two_line_list_item, ref) {
+            @Override
+            protected void populateView(View view, Message message, int position) {
+                ((TextView)view.findViewById(android.R.id.text1)).setText(message.getUser());
+                ((TextView)view.findViewById(android.R.id.text2)).setText(message.getMessage());
+
+            }
+        };
+        mMessageListView.setAdapter(mAdapter);
 
         mInputtedMessageReference = FirebaseDatabase
                 .getInstance()
@@ -62,7 +76,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onChildAdded(DataSnapshot dataSnapshot, String s) {
                 Log.d("onChildAdded", "called");
-                messages.add(dataSnapshot.getValue(Message.class).getMessageWithEmail());
+                messages.add(dataSnapshot.getValue(Message.class).getMessage());
                 mAdapter.notifyDataSetChanged();
 
             }
@@ -88,9 +102,6 @@ public class MainActivity extends AppCompatActivity {
 
             }
         });
-
-        mAdapter = new ArrayAdapter(MainActivity.this, android.R.layout.simple_list_item_1, messages);
-        mMessageListView.setAdapter(mAdapter);
 
         mNewMessageButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -136,5 +147,11 @@ public class MainActivity extends AppCompatActivity {
         String pushId = ref.getKey();
         messageObject.setPushId(pushId);
         ref.setValue(messageObject);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        mAdapter.cleanup();
     }
 }

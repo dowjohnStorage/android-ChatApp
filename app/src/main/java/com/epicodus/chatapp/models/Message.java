@@ -26,7 +26,4 @@ public class Message {
         this.pushId = mPushId;
     }
 
-    public String getMessageWithEmail() {
-        return "'" + message + "' from: " + user;
-    }
 }
